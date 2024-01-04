@@ -1,0 +1,53 @@
+#! /usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.38;
+
+my %data;
+
+my $start = time();
+
+open(my $readHandle, '<', $ARGV[0]) or die "Failed\n";
+
+while ( my $line = <$readHandle> )
+{
+    chomp($line);
+    my ( $city, $temp ) = split( /;/, $line );
+
+    if ( $data{$city} )
+    {
+        $data{$city}{min} = $temp
+            if $temp < $data{$city}{min};
+
+        $data{$city}{max} = $temp
+            if $temp > $data{$city}{max};
+
+        $data{$city}{sum}+= $temp;
+
+        $data{$city}{n}++;
+    }
+    else
+    {
+        $data{$city} = { min => $temp, sum => $temp, max => $temp, n => 1 };
+    }
+}
+
+print "{ ";
+
+for my $city ( sort keys %data )
+{
+    my $d = delete $data{$city};
+    my $term = %data ? ', ' : '';
+    my $mean = $d->{sum} / $d->{n};
+    print sprintf( '%s=%.1f/%.1f/%.1f%s',
+        $city, $d->{min}, $mean, $d->{max}, $term );
+}
+
+print " }\n";
+
+my $stop = time();
+
+say "Time: " . ( $stop - $start ) . " seconds.";
+
+1;
