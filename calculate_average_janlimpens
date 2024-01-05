@@ -5,31 +5,41 @@ use warnings;
 use v5.38;
 
 my %data;
-
+my $m = 10;
 my $start = time();
 
-open(my $readHandle, '<', $ARGV[0]) or die "Failed\n";
+open(my $readHandle, '<', $ARGV[0])
+    or die "Couldn't open file\n";
 
 while ( my $line = <$readHandle> )
 {
     chomp($line);
-    my ( $city, $temp ) = split( /;/, $line );
 
-    if ( $data{$city} )
+    my ( $city, $temp ) = split( /;/, $line, 2);
+
+    $temp *= $m;
+
+    use integer;
+
+    if ( my $d = $data{$city} )
     {
-        $data{$city}{min} = $temp
-            if $temp < $data{$city}{min};
+        if ($temp < $d->{min}) {
+            $d->{min} = $temp
+        } elsif ($temp > $d->{max}) {
+            $d->{max} = $temp
+        }
 
-        $data{$city}{max} = $temp
-            if $temp > $data{$city}{max};
-
-        $data{$city}{sum}+= $temp;
-
-        $data{$city}{n}++;
+        $d->{sum} += $temp;
+        $d->{n}++;
     }
     else
     {
-        $data{$city} = { min => $temp, sum => $temp, max => $temp, n => 1 };
+        $data{$city} = {
+            min => $temp,
+            sum => $temp,
+            max => $temp,
+            n => 1
+        };
     }
 }
 
@@ -40,8 +50,14 @@ for my $city ( sort keys %data )
     my $d = delete $data{$city};
     my $term = %data ? ', ' : '';
     my $mean = $d->{sum} / $d->{n};
-    print sprintf( '%s=%.1f/%.1f/%.1f%s',
-        $city, $d->{min}, $mean, $d->{max}, $term );
+    print sprintf(
+        '%s=%.1f/%.1f/%.1f%s',
+        $city,
+        $d->{min}/$m,
+        $mean/$m,
+        $d->{max}/$m,
+        $term
+    );
 }
 
 print " }\n";
