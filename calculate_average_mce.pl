@@ -61,8 +61,7 @@ print "{ ";
 
 for my $city ( sort keys %final_data ) {
     my $data = delete $final_data{$city};
-    my $avg = $data->{sum} / $data->{n};
-    print "{ $city: $data->{min}/$avg/$data->{max} }";
+    printf '%s=%.1f/%.1f/%.1f', $city, $data->{min}, $data->{sum} / $data->{n}, $data->{max};
     print ", " if %final_data;
 }
 
